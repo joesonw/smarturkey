@@ -66,7 +66,7 @@ export default class WebSocketNetServer implements INetServer {
 		
 		socket.on('message', (message) => {
 			if (message.event && (typeof message.event == 'string')) {
-				let e:ClientEvent = new ClientEvent(message.event);
+				let e:Event = new Event(message.event);
 				for (let key in (message.payload || {})) {
 					e[key] = message.payload[key];
 				}
@@ -75,9 +75,10 @@ export default class WebSocketNetServer implements INetServer {
 		});
 		
 		socket.on('disconnect', () => {
-			self.dispatchEvent(new ClientEvent(ClientEvent.CONNECT));
+			session.dispatchEvent(new Event(ClientEvent.DISCONNECT));
 		});
-		
-		this.connectionCallback(session);
+		let e = new Event(ClientEvent.CONNECT);
+		e['session'] = session;
+		this.dispatchEvent(e);
 	}
 }

@@ -1,6 +1,7 @@
 import ApiManager from './api/ApiManager';
 import INetServer from '../net/INetServer';
 import Session from '../net/Session';
+import User from './entities/User';
 import Logger from '../util/Logger';
 import Zone from './entities/Zone';
 import ClientMessage from '../net/ClientMessage';
@@ -8,48 +9,59 @@ import EventListener from '../events/EventListener';
 
 import Event from '../events/Event';
 import ClientEvent from '../events/ClientEvent';
-import {findIndexOf,findIndex} from '../util/Utilities';
+import {findIndexOf, findIndex, removeElementOf} from '../util/Utilities';
+
+import ExtensionManager from './managers/ExtensionManager';
 
 export default class Server extends EventListener{
 	private apiManager: ApiManager;
 	private server: INetServer;
-	private sessions:Array<Session> = new Array<Session>();
+	private users:Array<User> = new Array<User>();
 	private zones:Array<Zone> = new Array<Zone>();
+	private extensionManager:ExtensionManager;
 	
 	constructor() {
 		super();
 		this.apiManager = new ApiManager();
+		this.extensionManager = ExtensionManager.getInstance();
 	}
 	protected getApiManager():ApiManager {
 		return this.apiManager;
+	}
+	protected getExtensionManager():ExtensionManager {
+		return this.extensionManager;
 	}
 	protected startServer(server:INetServer) {
 		this.server = server;
 		let self = this;
 		
-		server.addEventListener(ClientEvent.CONNECT, (e:ClientEvent) => {
+		server.addEventListener(ClientEvent.CONNECT, (e:Event) => {
 			let session:Session = e['session'];
+			let user = new User(session);
 			Logger.info('Client with id ' + session.getId() + ' conntected');
-			self.sessions.push(session);
-			self.dispatchEvent(e);
-			self.eventRegister(session);
+			let clientEvent:ClientEvent = new ClientEvent(ClientEvent.CONNECT,user);
+			self.dispatchEvent(clientEvent);
+			self.eventRegister(user);
+			self.users.push(user);
 		});
 		server.start();
 	}
-	protected eventRegister(session:Session) {
+	protected eventRegister(user:User) {
 		let self = this;
-		session.addEventListener(ClientEvent.JOIN_ZONE,(e:ClientEvent) {
-			let zoneName = e['zone'] || '';
-			let index = findIndex(this.zones,zoneName,(z:Zone) => z.getName());
+		user.getSession().addEventListener(ClientEvent.JOIN_ZONE,(e:ClientEvent) => {
+			let zoneId = e['zone'] || '';
+			let index = findIndex(this.zones,zoneId,(z:Zone) => z.getId());
 			let zone:Zone = this.zones[index];
 			if (zone) {
-				let e = new ClientEvent(ClientEvent.JOIN_ZONE);
-				e['session'] = session;
+				let e:ClientEvent = new ClientEvent(ClientEvent.JOIN_ZONE,user);
 				e['zone'] = zone;
 				zone.dispatchEvent(e);
 			}
 		});
-		
+		user.getSession().addEventListener(ClientEvent.DISCONNECT,(e:Event) => {
+			removeElementOf(self.users,user);
+			self.dispatchEvent(e);
+		});
 	}
 	
 	protected addZone(zone:Zone) {

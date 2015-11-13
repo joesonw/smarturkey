@@ -16,7 +16,7 @@ const Dictionary = Collection.Dictionary;
 
 export default class Zone extends EventListener{
 
-	private name:string;
+	private id:string;
 	private active:boolean = false;
 	private rooms:Array<Room> = new Array<Room>();
 	private extensions:Array<Extension> = new Array<Extension>();
@@ -25,9 +25,9 @@ export default class Zone extends EventListener{
 	private roomIdGenerator:IIdGenerator = new DefaultIdGenerator();
 	private extensionIdGenerator:IIdGenerator = new DefaultIdGenerator();
 
-	constructor(name:string) {
+	constructor(id:string) {
 		super();
-		this.name = name;
+		this.id = id;
 	}
 	
 	private handleJoinZone(e:ClientEvent) {
@@ -112,7 +112,7 @@ export default class Zone extends EventListener{
 			this.users.splice(index,1);
 		}
 	}
-	getName():string {
-		return this.name;
+	getId():string {
+		return this.id;
 	}
 }
