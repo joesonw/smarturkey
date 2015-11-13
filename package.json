@@ -1,0 +1,23 @@
+{
+  "name": "node-smarturkey",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bson": "^0.4.19",
+    "co": "^4.6.0",
+    "lodash": "^3.10.1",
+    "socket.io": "^1.3.7",
+    "winston": "^2.1.0"
+  },
+  "devDependencies": {
+    "bootstrap": "^3.3.5",
+    "jquery": "^2.1.4",
+    "socket.io-client": "^1.3.7"
+  }
+}
