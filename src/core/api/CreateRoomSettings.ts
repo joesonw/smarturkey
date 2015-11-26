@@ -1,15 +1,12 @@
 import Zone from '../entities/Zone';
 export default class CreateRoomSettings {
-	private zone:Zone;
+	private name:string;
 	constructor() {}
-	
-	setZone(zone:Zone):CreateRoomSettings {
-		this.zone = zone;
+	setName(name:string):CreateRoomSettings {
+		this.name = name;
 		return this;
 	}
-	getZone():Zone {
-		return this.zone;
+	getName():string {
+		return this.name;
 	}
-	
-	
 }

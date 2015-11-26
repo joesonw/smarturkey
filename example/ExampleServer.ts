@@ -4,6 +4,8 @@ import Logger from '../src/util/Logger';
 import Event from '../src/events/Event';
 import ClientEvent from '../src/events/ClientEvent';
 import Session from '../src/net/session';
+import Zone from '../src/core/entities/Zone';
+import MyExtension from './MyExtension';
 
 /// <reference path="../typings/winston/winston.d.ts" />
 import winston = require('winston');
@@ -18,6 +20,11 @@ class ExampleServer extends Server {
 			let session:Session = e.getUser().getSession();
 			console.log('yes ' + session.getId());
 		});
+		let zone1:Zone = new Zone('1');
+		let zone1Extension:MyExtension = new MyExtension();
+		zone1.setExtension(zone1Extension);
+		zone1.setActive(true);
+		this.addZone(zone1);
 	}
 }
 winston.level = 'debug';

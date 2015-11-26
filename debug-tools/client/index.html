@@ -48,13 +48,14 @@
     			var json = $('#event-json').prop('checked');
     			var msg = $('#input').val();
     			var type = $('#event-type').val();
+				console.log(json);
     			if (json) {
     				try {
     					msg = JSON.parse(msg);
     				} catch(e) {
     				}
     			}
-
+				console.log(typeof msg);
     			client.emit(type,msg);
 
     			$('#input').val('');

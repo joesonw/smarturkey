@@ -38,9 +38,8 @@ export default class WebSocketNetServer implements INetServer {
 		return this.emitter.listeners(event).length > 0;
 	}
 	
-	broadcastEvent(e:ServerEvent) {
-		
-	}
+	broadcastEvent(e:ServerEvent) {}
+	
 	registerConnectionCallback(callback:(session:Session) => void):void {
 		this.connectionCallback = callback;
 	}
@@ -51,11 +50,18 @@ export default class WebSocketNetServer implements INetServer {
 	private handler(socket:SocketIO.Socket) {
 		let self = this;
 		let connection:Connection = {
-			send: (message:ClientMessage) => {
+			send: (event:Event) => {
+				let payload = {};
+				for (let key in event) {
+					if (key == 'name') {
+						continue;
+					}
+					payload[key] = event[key]
+				}
 				socket.emit('message',{
-					event: message.event,
-					payload: message.payload
-				})	
+					event: event.name,
+					payload: payload
+				});
 			},
 			ip: socket.conn.remoteAddress,
 			disconnect: () => {
@@ -73,7 +79,6 @@ export default class WebSocketNetServer implements INetServer {
 				session.dispatchEvent(e);
 			}
 		});
-		
 		socket.on('disconnect', () => {
 			session.dispatchEvent(new Event(ClientEvent.DISCONNECT));
 		});

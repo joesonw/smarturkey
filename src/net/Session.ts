@@ -3,6 +3,7 @@ import ServerMessage from './ServerMessage';
 import ClientMessage from './ClientMessage';
 import CallbackNotDefinedError from '../error/CallbackNotDefinedError';
 import Connection from './Connection';
+import Event from '../events/Event';
 
 import EventListener from '../events/EventListener';
 
@@ -15,8 +16,9 @@ export default class Session extends EventListener{
 		this.connection = connection;
 		let self = this;
 	}
-	send(e:ServerEvent) {
-		this.connection.send({event:e.getType(),payload:e.getPayload()});
+	send(e:Event) {
+		console.log(e);
+		this.connection.send(e);
 	}
 	getId():string {
 		return this.id;

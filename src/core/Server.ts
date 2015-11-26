@@ -22,7 +22,6 @@ export default class Server extends EventListener{
 	
 	constructor() {
 		super();
-		this.apiManager = new ApiManager();
 		this.extensionManager = ExtensionManager.getInstance();
 	}
 	protected getApiManager():ApiManager {
@@ -54,7 +53,6 @@ export default class Server extends EventListener{
 			let zone:Zone = this.zones[index];
 			if (zone) {
 				let e:ClientEvent = new ClientEvent(ClientEvent.JOIN_ZONE,user);
-				e['zone'] = zone;
 				zone.dispatchEvent(e);
 			}
 		});

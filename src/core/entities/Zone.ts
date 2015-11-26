@@ -4,22 +4,25 @@ import Extension from './Extension';
 import User from './User';
 import IIdGenerator from '../../util/IIdGenerator';
 import DefaultIdGenerator from '../../util/DefaultIdGenerator';
-import {findIndexOf,findIndex} from '../../util/Utilities';
+import {findIndexOf,findIndex,removeElementOf} from '../../util/Utilities';
 
-
+import UninitializedError from '../../error/UninitializedError';
 import EventListener from '../../events/EventListener';
 import ClientEvent from '../../events/ClientEvent';
 import Session from '../../net/Session';
+import ApiManager from '../api/ApiManager';
 
 const Dictionary = Collection.Dictionary;
 
-
+/*
+ Stateful container for rooms, parse event into request and pass to binded extension
+*/
 export default class Zone extends EventListener{
 
 	private id:string;
 	private active:boolean = false;
 	private rooms:Array<Room> = new Array<Room>();
-	private extensions:Array<Extension> = new Array<Extension>();
+	private extension:Extension;
 	private users:Array<User> = new Array<User>();
 
 	private roomIdGenerator:IIdGenerator = new DefaultIdGenerator();
@@ -31,19 +34,20 @@ export default class Zone extends EventListener{
 	}
 	
 	private handleJoinZone(e:ClientEvent) {
-		let session:Session = e['session'];
-		let user:User = new User(session);
+		let user:User = e.getUser();
 		this.users.push(user);
-		session.addEventListener(ClientEvent.DISCONNECT,this.handleDiscconect.bind(this,session));
+		user.getSession().addEventListener(ClientEvent.DISCONNECT,this.handleDiscconect.bind(this,user));
+		this.extension.handleRequest(user,ClientEvent.JOIN_ZONE,{},null);
 	}
 	
-	private handleDiscconect(session:Session,e:ClientEvent) {
-		let index = findIndex(this.users, session, (u:User) => u.getSession());
-		if (index > -1)
-			this.users.splice(index,1);
+	private handleDiscconect(user:User,e:ClientEvent) {
+		removeElementOf(this.users,user);
 	}
 	
 	init() {
+		if (!this.extension) {
+			throw new UninitializedError('extension');
+		}
 		this.addEventListener(ClientEvent.JOIN_ZONE,this.handleJoinZone.bind(this));
 	}
 	destroy() {
@@ -62,11 +66,11 @@ export default class Zone extends EventListener{
 		return this.active;
 	}
 
-	addRoom(room:Room):void {
+	addRoom(room:Room) {
 		//room.setId(this.roomIdGenerator.generate(room));
 		this.rooms.push(room);
 	}
-	removeRoom(room:Room | string):void {
+	removeRoom(room:Room | string) {
 		let index = -1;
 		if (typeof room == 'string') {
 			index = findIndex(this.rooms,room,(r:Room) => r.getId());
@@ -77,31 +81,24 @@ export default class Zone extends EventListener{
 			this.rooms.splice(index,1);
 		}
 	}
-	setRoomIdGenerator(generator:IIdGenerator):void {
+	setRoomIdGenerator(generator:IIdGenerator) {
 		this.roomIdGenerator = generator;
 	}
-	addExtension(extension:Extension):void {
-		//extension.setId(this.roomIdGenerator.generate(extension));
-		this.extensions.push(extension);
+	setExtension(extension:Extension) {
+		this.extension = extension;
+		extension.setApiManager(new ApiManager(this));
+		extension.init();
 	}
-	removeExtension(extension: Extension | string):void {
-		let index = -1;
-		if (typeof extension == 'string') {
-			index = findIndex(this.extensions,extension,(e:Extension) => e.getId());
-		} else if (extension instanceof Extension) {
-			index = findIndexOf(this.extensions,extension);
-		}
-		if (index !== -1) {
-			this.extensions.splice(index,1);
-		}
+	getExtension():Extension {
+		return this.extension;
 	}
-	setExtensionIdGenerator(generator:IIdGenerator):void {
-		this.extensionIdGenerator = generator;
-	}
-	addUser(user:User):void {
+	addUser(user:User) {
 		this.users.push(user);
 	}
-	removeUser(user: User | string):void {
+	getUsers():Array<User> {
+		return this.users;
+	}
+	removeUser(user: User | string) {
 		let index = -1;
 		if(typeof user == 'string') {
 			index = findIndex(this.users,user,(u:User) => u.getId());
